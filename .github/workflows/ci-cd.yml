@@ -87,7 +87,7 @@ jobs:
            output:
               hello-world-deployment.yaml
             
-        #Deploys application based on given manifest file
+        #Deploys application based on given manifest files
         - name: Deploys application
           uses: Azure/K8s-deploy@v4
           with:
