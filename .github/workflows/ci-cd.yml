@@ -31,6 +31,47 @@ jobs:
             file: ./Dockerfile
             
     deployToAKS:
+      permission:
+    
       runs-on: ubuntu-latest
+      needs: [buildImage]
+      environment: Production
       steps:
-        - run: echo "hello"
+        - name: Check out repository code
+          uses: actions/checkout@v3
+        
+        - name: Azure login
+          uses: azure/login@v1.4.6
+          with:
+            client-id: '6a35bc94-b773-46b0-9b8d-0d84fb73c2c1'
+            tenant-id: '8e19963a-81a0-4e69-a605-fe38b4f99d7a'
+            subscription-id: '23a089d8-a444-4b86-b01d-a164b832a233'
+            
+        - name: Setup kubelogin
+          uses: Azure/use-kubelogin@v1
+            
+        - name: Azure Kubernetes set context
+          uses: Azure/aks-set-context@v3
+          with:
+            # Resource Group Name
+            resource-group: 'github-action-rg'
+            # AKS Cluster Name
+            cluster-name: 'allenk8sdemo'
+            # AKS Cluster Subscription
+            subscription: '23a089d8-a444-4b86-b01d-a164b832a233'
+            # Get cluster admin credentials. Values: true or false
+            admin:  'false'
+            # Enables kubelogin for non-admin user scenario. Values: true or false
+            use-kubelogin: 'true'
+            
+        #Deploys application based on given manifest file
+        - name: Deploys application
+          uses: Azure/K8s-deploy@v4
+          with:
+            action: deploy
+            manifests: |
+               kubernetes/hello-world-deployment.yaml
+               kubernetes/hello-world-service.yaml
+            images: |
+               allengithubaction.azurecr.io/hello-world-app:${{ github.sha }}
+
